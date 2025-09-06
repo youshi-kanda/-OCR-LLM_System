@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker-compose up:*)",
+      "Bash(docker-compose:*)",
+      "Bash(timeout 15s docker-compose logs frontend --follow)",
+      "Bash(timeout 20s docker-compose logs frontend --follow)",
+      "Bash(timeout 10s docker-compose logs frontend --follow)",
+      "Bash(timeout 30s docker-compose logs frontend --follow)",
+      "Bash(curl:*)",
+      "Bash(python3:*)",
+      "Bash(python test:*)",
+      "Bash(timeout 15s docker-compose logs backend --follow)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
