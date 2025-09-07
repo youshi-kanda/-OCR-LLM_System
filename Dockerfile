@@ -45,6 +45,8 @@ ls -la /app/static/ || echo "Static directory not found"\n\
 # Start nginx in background\n\
 echo "Starting nginx..."\n\
 nginx -t && nginx &\n\
+echo "Nginx started on port 80"\n\
+sleep 2\n\
 \n\
 # Display environment variables for debugging\n\
 echo "DATABASE_URL: ${DATABASE_URL}"\n\
@@ -87,6 +89,6 @@ python run_migrations.py\n\
 echo "Starting FastAPI server..."\n\
 exec uvicorn main:app --host 0.0.0.0 --port 8080 --workers 1' > start.sh && chmod +x start.sh
 
-EXPOSE $PORT
+EXPOSE 80
 
 CMD ["./start.sh"]
