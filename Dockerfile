@@ -80,7 +80,7 @@ python run_migrations.py\n\
 \n\
 # Start FastAPI\n\
 echo "Starting FastAPI server..."\n\
-exec uvicorn main:app --host 0.0.0.0 --port $PORT --workers 1' > start.sh && chmod +x start.sh
+exec uvicorn main:app --host 0.0.0.0 --port 8080 --workers 1' > start.sh && chmod +x start.sh
 
 EXPOSE $PORT
 
