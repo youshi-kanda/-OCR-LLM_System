@@ -34,13 +34,16 @@ COPY backend/ ./
 COPY --from=frontend-builder /app/frontend/build ./static
 
 # Copy nginx config
-COPY nginx.conf /etc/nginx/sites-available/default
+RUN rm -f /etc/nginx/sites-enabled/default
+COPY nginx.conf /etc/nginx/sites-enabled/default
 
 # Create startup script with database readiness check
 RUN echo '#!/bin/bash\n\
 # Check static files\n\
 echo "Checking static files..."\n\
 ls -la /app/static/ || echo "Static directory not found"\n\
+echo "Index.html content:"\n\
+head -n 10 /app/static/index.html || echo "index.html not found"\n\
 \n\
 # Start nginx in background\n\
 echo "Starting nginx..."\n\
