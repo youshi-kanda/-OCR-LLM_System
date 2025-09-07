@@ -38,8 +38,13 @@ COPY nginx.conf /etc/nginx/sites-available/default
 
 # Create startup script with database readiness check
 RUN echo '#!/bin/bash\n\
+# Check static files\n\
+echo "Checking static files..."\n\
+ls -la /app/static/ || echo "Static directory not found"\n\
+\n\
 # Start nginx in background\n\
-nginx &\n\
+echo "Starting nginx..."\n\
+nginx -t && nginx &\n\
 \n\
 # Display environment variables for debugging\n\
 echo "DATABASE_URL: ${DATABASE_URL}"\n\

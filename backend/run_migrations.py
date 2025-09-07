@@ -21,6 +21,11 @@ async def run_migrations():
         migrations_dir = Path(__file__).parent / 'db' / 'migrations'
         if not migrations_dir.exists():
             migrations_dir = Path(__file__).parent.parent / 'db' / 'migrations'
+        if not migrations_dir.exists():
+            # Try relative to working directory
+            migrations_dir = Path('./db/migrations')
+        if not migrations_dir.exists():
+            migrations_dir = Path('./backend/db/migrations')
         
         if not migrations_dir.exists():
             print("Migrations directory not found")
