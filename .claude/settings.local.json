@@ -27,7 +27,13 @@
       "Bash(python:*)",
       "Bash(timeout 5s docker-compose logs backend --follow)",
       "Bash(timeout 10s docker-compose logs:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(git branch:*)",
+      "Bash(gh repo create:*)",
+      "Bash(git remote remove:*)",
+      "Bash(git remote add:*)",
+      "Bash(railway logs:*)",
+      "Bash(railway login:*)"
     ],
     "deny": [],
     "ask": []

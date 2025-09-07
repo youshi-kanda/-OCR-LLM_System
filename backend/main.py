@@ -45,9 +45,24 @@ class ProcessingResult(BaseModel):
 @app.on_event("startup")
 async def startup_event():
     global learning_service
-    await db_service.initialize()
-    learning_service = LearningService(db_service.pool)
-    os.makedirs("uploads", exist_ok=True)
+    try:
+        print("Initializing database service...")
+        await db_service.initialize()
+        print("Database service initialized successfully")
+        
+        print("Initializing learning service...")
+        learning_service = LearningService(db_service.pool)
+        print("Learning service initialized successfully")
+        
+        os.makedirs("uploads", exist_ok=True)
+        print("Uploads directory created/verified")
+        print("Application startup completed successfully")
+        
+    except Exception as e:
+        print(f"Startup error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise e
     
 # 学習ルーターを追加
 app.include_router(learning.router)
@@ -74,6 +89,31 @@ manager = ConnectionManager()
 @app.get("/")
 async def root():
     return {"message": "Siwake Bank Data Reader API"}
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint to verify database connectivity"""
+    try:
+        # Test database connection
+        if db_service.pool:
+            async with db_service.pool.acquire() as conn:
+                await conn.execute("SELECT 1")
+            db_status = "connected"
+        else:
+            db_status = "not_initialized"
+        
+        return {
+            "status": "healthy",
+            "database": db_status,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {
+            "status": "unhealthy", 
+            "database": "connection_failed",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
 
 @app.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
