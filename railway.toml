@@ -10,3 +10,7 @@ startCommand = "./start.sh"
 
 [variables]
 PORT = "80"
+
+[deploy]
+healthcheckPath = "/"
+healthcheckTimeout = 300

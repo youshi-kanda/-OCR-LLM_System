@@ -49,7 +49,9 @@ head -n 10 /app/static/index.html || echo "index.html not found"\n\
 echo "Starting nginx..."\n\
 nginx -t && nginx &\n\
 echo "Nginx started on port 80"\n\
-sleep 2\n\
+echo "Nginx process:"\n\
+ps aux | grep nginx | grep -v grep\n\
+sleep 3\n\
 \n\
 # Display environment variables for debugging\n\
 echo "DATABASE_URL: ${DATABASE_URL}"\n\
@@ -88,9 +90,15 @@ done\n\
 echo "Running database migrations..."\n\
 python run_migrations.py\n\
 \n\
-# Start FastAPI\n\
+# Start FastAPI in background\n\
 echo "Starting FastAPI server..."\n\
-exec uvicorn main:app --host 0.0.0.0 --port 8080 --workers 1' > start.sh && chmod +x start.sh
+uvicorn main:app --host 0.0.0.0 --port 8080 --workers 1 &\n\
+echo "FastAPI started on port 8080"\n\
+sleep 2\n\
+\n\
+# Start nginx in foreground (as main process)\n\
+echo "Starting nginx in foreground..."\n\
+exec nginx -g "daemon off;"' > start.sh && chmod +x start.sh
 
 EXPOSE 80
 
