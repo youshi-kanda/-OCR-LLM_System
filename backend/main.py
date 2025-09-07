@@ -14,7 +14,9 @@ from pydantic import BaseModel
 
 from services.llm_processor import DualLLMProcessor
 from services.database import DatabaseService
+from services.learning_service import LearningService
 from models.transaction import TransactionData
+from routers import learning
 
 app = FastAPI(title="Siwake Bank Data Reader", version="1.0.0")
 
@@ -30,6 +32,7 @@ app.add_middleware(
 # サービス初期化
 llm_processor = DualLLMProcessor()
 db_service = DatabaseService()
+learning_service = None  # startup時に初期化
 
 class ProcessingResult(BaseModel):
     id: str
@@ -41,8 +44,13 @@ class ProcessingResult(BaseModel):
 
 @app.on_event("startup")
 async def startup_event():
+    global learning_service
     await db_service.initialize()
+    learning_service = LearningService(db_service.pool)
     os.makedirs("uploads", exist_ok=True)
+    
+# 学習ルーターを追加
+app.include_router(learning.router)
 
 # WebSocket接続を管理
 class ConnectionManager:
@@ -116,6 +124,41 @@ async def upload_file(file: UploadFile = File(...), client_id: str = None):
         print("Starting LLM processing...")
         start_time = datetime.now()
         result = await llm_processor.process_document(content, send_progress)
+        
+        # 学習済みパターンを適用して自動修正
+        if learning_service and result.transactions:
+            await send_progress("Applying learned patterns for auto-correction...")
+            # 銀行名を検出（ファイル名から推定）
+            bank_name = None
+            for bank in ['GMOあおぞら', '三菱UFJ', 'みずほ', '楽天', 'ゆうちょ']:
+                if bank in file.filename:
+                    bank_name = bank
+                    break
+            
+            # トランザクションをDict形式に変換
+            transactions_dict = [
+                {
+                    'date': t.date,
+                    'description': t.description,
+                    'withdrawal': t.withdrawal,
+                    'deposit': t.deposit,
+                    'balance': t.balance,
+                    'confidence_score': t.confidence_score
+                }
+                for t in result.transactions
+            ]
+            
+            # 学習パターンを適用
+            corrected_transactions = await learning_service.apply_learned_corrections(
+                transactions_dict, bank_name
+            )
+            
+            # TransactionDataに戻す
+            result.transactions = [
+                TransactionData(**t) for t in corrected_transactions
+            ]
+            print(f"Applied learning corrections for bank: {bank_name}")
+        
         processing_time = (datetime.now() - start_time).total_seconds()
         print(f"LLM processing completed in {processing_time:.2f}s")
         print(f"Result: {len(result.transactions)} transactions, confidence: {result.confidence_score}")

@@ -134,8 +134,11 @@ class DualLLMProcessor:
                 if progress_callback:
                     await progress_callback(f"Finalizing results: {len(all_transactions)} transactions found", progress=95)
                 
-                # 統合結果を返す
-                avg_confidence = total_confidence / len(images) if images else 0
+                # 総合信頼度を全取引の信頼度平均で計算
+                if all_transactions:
+                    avg_confidence = sum(tx.confidence_score for tx in all_transactions) / len(all_transactions)
+                else:
+                    avg_confidence = 0
                 
                 if progress_callback:
                     await progress_callback(f"Processing completed! {len(all_transactions)} transactions extracted", progress=100)
@@ -273,7 +276,8 @@ class DualLLMProcessor:
                     "description": "取引内容",
                     "withdrawal": null,
                     "deposit": 金額,
-                    "balance": 残高
+                    "balance": 残高,
+                    "confidence_score": 読み取り精度(0.1-1.0)
                 }
             ],
             "confidence": 0.95
@@ -283,17 +287,32 @@ class DualLLMProcessor:
         - 画像に表示されているすべての取引行を抽出してください
         - 見切れている部分や不明瞭な部分も可能な限り読み取ってください
         - 取引が10件以上ある場合も、すべて抽出してください
-        - 金額は数値のみ（カンマなし）
+        - 金額は数値のみ(カンマなし)
         - 出金はwithdrawal、入金はdepositに設定
         - 日本の銀行通帳フォーマットを理解して処理
         
-        文字認識の注意点：
+        信頼度評価基準(confidence_score):
+        - 0.95-1.0: 文字が明瞭で、内容も確実に判読できる
+        - 0.85-0.94: 文字は読めるが、一部に不明瞭な部分がある
+        - 0.70-0.84: 文字が不明瞭で、推測が必要
+        - 0.50-0.69: 大部分が不明瞭で、大幅な推測が必要
+        - 0.30-0.49: ほとんど読めないが、何らかの情報は抽出可能
+        - 0.1-0.29: 極めて不明瞭で、ほぼ推測に依存
+        
+        文字認識の注意点:
         - 不明瞭な文字は文脈から推測してください
-        - 半角カタカナ（ｱｲｳｴｵ、ﾊﾟ、ﾋﾞ、ﾌﾞ等）は全角カタカナ（アイウエオ、パ、ビ、ブ等）に変換してください
+        - 半角カタカナは必ず全角カタカナに変換してください
         - カタカナは全角で統一してください
-        - 一般的な銀行取引用語を優先してください
-        - 「クレジットカード」「ATM」「振込」「振込手数料」「総合振込」等の一般的な用語
-        - 摘要欄の会社名やサービス名は文脈から推測
+        - 曖昧な文字は銀行取引の文脈で判断してください
+        - 半角カナは読み間違いが多いため、慎重に変換してください
+        
+        半角カナの変換例(重要):
+        - ｼｬｶｲﾎｴﾝﾘｮｳ → 社会保険料 (クレジットカードではない)
+        - ｶﾌﾞｼｷｶﾞｲｼｬ → 株式会社
+        - ｺｳｷｮｳﾘｮｳｷﾝ → 公共料金
+        - ﾃﾞﾝｷﾀﾞｲ → 電気代
+        - ｶﾞｽﾀﾞｲ → ガス代
+        - ｽｲﾄﾞｳﾀﾞｲ → 水道代
         - 半角カタカナの変換例：
           * ｱｿｼｴｰｼｮﾝ → アソシエーション
           * ﾓﾉﾀﾛｰ → モノタロー
@@ -400,22 +419,34 @@ class DualLLMProcessor:
             "description": "取引内容",
             "withdrawal": null,
             "deposit": 金額,
-            "balance": 残高
+            "balance": 残高,
+            "confidence_score": 読み取り精度(0.1-1.0)
         }
     ],
     "confidence": 0.95
 }
 
-- 画像に表示されているすべての取引行を抽出してください（20件以上ある場合もすべて）
-- 金額は数値のみ（カンマなし）
+信頼度評価基準：
+- 0.95-1.0: 文字が明瞭で確実
+- 0.85-0.94: 文字は読めるが一部不明瞭
+- 0.70-0.84: 推測が必要
+- 0.50-0.69: 大幅な推測が必要
+
+半角カナ変換の重要な例：
+- ｼｬｶｲﾎｴﾝﾘｮｳ → 社会保険料(クレジットカードではない)
+- ｶﾌﾞｼｷｶﾞｲｼｬ → 株式会社
+- 半角カタカナは必ず全角に変換してください
+
+- 画像に表示されているすべての取引行を抽出してください(20件以上ある場合もすべて)
+- 金額は数値のみ(カンマなし)
 - 出金はwithdrawal、入金はdepositに設定
 - 日本の銀行通帳フォーマットを理解して処理
 - 必ずJSON形式のみで応答し、追加のテキストは含めないでください
 
-文字認識の注意点：
-- 半角カタカナ（ｱ、ｲ、ｳ、ｴ、ｵ、ﾊﾟ、ﾋﾞ、ﾌﾞ等）は全角カタカナに変換してください
-- 変換例：ｱｿｼｴｰｼｮﾝ→アソシエーション、ﾓﾉﾀﾛｰ→モノタロー、ﾗｲﾌ→ライフ、ｸﾚｼﾞｯﾄ→クレジット
-- 一般的な銀行用語を優先：振込、ATM、クレジットカード、総合振込、振込手数料
+文字認識の注意点:
+- 半角カタカナ(ｱ、ｲ、ｳ、ｴ、ｵ、ﾊﾟ、ﾋﾞ、ﾌﾞ等)は全角カタカナに変換してください
+- 変換例: ｱｿｼｴｰｼｮﾝ→アソシエーション、ﾓﾉﾀﾛｰ→モノタロー、ﾗｲﾌ→ライフ、ｸﾚｼﾞｯﾄ→クレジット
+- 一般的な銀行用語を優先: 振込、ATM、クレジットカード、総合振込、振込手数料
 """
                             },
                             {
@@ -514,9 +545,15 @@ class DualLLMProcessor:
         # Claudeの結果をベースに、GPT-4Vの検証を反映
         final_transactions = self._merge_transactions(claude_result, gpt4v_result)
         
+        # 総合信頼度を全取引の信頼度平均で再計算
+        if final_transactions:
+            actual_confidence = sum(tx.confidence_score for tx in final_transactions) / len(final_transactions)
+        else:
+            actual_confidence = final_confidence
+        
         return ProcessingResult(
             transactions=final_transactions,
-            confidence_score=final_confidence,
+            confidence_score=actual_confidence,
             processing_method=method,
             claude_confidence=claude_confidence,
             gpt4v_confidence=gpt4v_confidence,

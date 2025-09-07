@@ -1,12 +1,12 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { CssBaseline, Container, Typography, Box } from '@mui/material';
+import { CssBaseline, Container, Typography, Box, Button } from '@mui/material';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import HistoryList from './components/HistoryList';
 import FileUploaderWithProgress from './components/FileUploaderWithProgress';
-import DataViewer from './components/DataViewer';
+import DataViewerEnhanced from './components/DataViewerEnhanced';
 import { ProcessingResult } from './types/transaction';
 import { getHistory, getResult, HistoryItem } from './services/api';
 
@@ -102,7 +102,7 @@ const EditPage: React.FC<{ fileId: string }> = ({ fileId }) => {
   }
 
   return (
-    <DataViewer 
+    <DataViewerEnhanced 
       result={result}
       onBack={() => navigate('/history')}
     />
@@ -147,6 +147,18 @@ const AppContent: React.FC = () => {
       <Route path="/edit/:fileId" element={
         <EditPageWrapper />
       } />
+      <Route path="*" element={
+        <Container maxWidth="lg">
+          <Box sx={{ py: 4, textAlign: 'center' }}>
+            <Typography variant="h4" gutterBottom>
+              ページが見つかりません
+            </Typography>
+            <Button variant="contained" onClick={() => window.location.href = '/'}>
+              ホームに戻る
+            </Button>
+          </Box>
+        </Container>
+      } />
     </Routes>
   );
 };
@@ -162,7 +174,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Router>
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Layout>
           <AppContent />
         </Layout>

@@ -12,7 +12,22 @@
       "Bash(python test:*)",
       "Bash(timeout 15s docker-compose logs backend --follow)",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(timeout 30s docker-compose logs backend --follow)",
+      "Bash(del \"C:\\Users\\rockr\\desk-mori\\siwake\\siwake-ver3.1\\frontend\\src\\setupProxy.js\")",
+      "Bash(del test_upload.py)",
+      "Bash(del \"test_upload.py\")",
+      "Bash(timeout 10s docker-compose logs backend --follow)",
+      "Bash(docker exec:*)",
+      "Bash(docker:*)",
+      "Bash(npm install:*)",
+      "Bash(python:*)",
+      "Bash(timeout 5s docker-compose logs backend --follow)",
+      "Bash(timeout 10s docker-compose logs:*)",
+      "Bash(timeout:*)"
     ],
     "deny": [],
     "ask": []

@@ -55,8 +55,12 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
-      - WDS_SOCKET_HOST=localhost
+      - REACT_APP_API_URL=http://localhost:8000
+      - WDS_SOCKET_HOST=0.0.0.0
       - WDS_SOCKET_PORT=3000
+      - FAST_REFRESH=false
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
     volumes:
       - ./frontend:/app
       - /app/node_modules

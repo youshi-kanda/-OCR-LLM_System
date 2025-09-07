@@ -18,6 +18,50 @@ import {
   Loop as ProcessingIcon
 } from '@mui/icons-material';
 
+// アニメーション用のスタイル
+const rotateKeyframes = `
+  @keyframes rotate {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
+const pulseKeyframes = `
+  @keyframes pulse {
+    0% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+`;
+
+// スタイルシートを動的に追加
+if (typeof document !== 'undefined' && !document.querySelector('#progress-animations')) {
+  const style = document.createElement('style');
+  style.id = 'progress-animations';
+  style.textContent = rotateKeyframes + pulseKeyframes + `
+    .rotating {
+      animation: rotate 2s linear infinite !important;
+    }
+    .pulsing {
+      animation: pulse 1.5s ease-in-out infinite !important;
+    }
+    .MuiLinearProgress-bar {
+      transition: transform 0.4s ease-in-out !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 interface ProgressDialogProps {
   open: boolean;
   title: string;
@@ -74,7 +118,7 @@ const ProgressDialog: React.FC<ProgressDialogProps> = ({
       <DialogTitle>{title}</DialogTitle>
       <DialogContent>
         <Box sx={{ mb: 3 }}>
-          {progress !== undefined ? (
+          {progress !== undefined && progress !== null ? (
             <>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                 <Typography variant="h6" sx={{ flexGrow: 1 }}>
@@ -85,7 +129,7 @@ const ProgressDialog: React.FC<ProgressDialogProps> = ({
                 </Typography>
               </Box>
               <LinearProgress 
-                variant="determinate" 
+                variant={progress <= 0 ? "indeterminate" : "determinate"} 
                 value={progress} 
                 sx={{ 
                   height: 12, 
@@ -97,7 +141,8 @@ const ProgressDialog: React.FC<ProgressDialogProps> = ({
                       'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)' :
                       progress < 90 ?
                       'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)' :
-                      'linear-gradient(45deg, #4CAF50 30%, #8BC34A 90%)'
+                      'linear-gradient(45deg, #4CAF50 30%, #8BC34A 90%)',
+                    transition: 'transform 0.4s ease-in-out'
                   }
                 }}
               />

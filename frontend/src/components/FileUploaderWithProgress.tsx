@@ -30,10 +30,21 @@ const FileUploaderWithProgress: React.FC<FileUploaderWithProgressProps> = ({
   const [progress, setProgress] = useState<number | undefined>(undefined);
   const [wsClient, setWsClient] = useState<WebSocket | null>(null);
   const [clientId] = useState(() => `client-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+  
+  // APIベースURLの設定
+  const API_BASE_URL = process.env.NODE_ENV === 'production' 
+    ? (process.env.REACT_APP_API_URL || 'http://localhost:8000')
+    : '';
 
   // WebSocket接続の初期化
   useEffect(() => {
-    const ws = new WebSocket(`ws://localhost:8000/ws/${clientId}`);
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    // 開発環境ではプロキシを使用、本番環境では環境変数を使用
+    const wsUrl = process.env.NODE_ENV === 'production'
+      ? API_BASE_URL.replace('http://', `${wsProtocol}//`).replace('https://', `${wsProtocol}//`) + `/ws/${clientId}`
+      : `${wsProtocol}//127.0.0.1:8000/ws/${clientId}`;
+    console.log('Connecting to WebSocket:', wsUrl);
+    const ws = new WebSocket(wsUrl);
     
     ws.onopen = () => {
       console.log('WebSocket connected');
@@ -93,7 +104,7 @@ const FileUploaderWithProgress: React.FC<FileUploaderWithProgressProps> = ({
     return () => {
       ws.close();
     };
-  }, [clientId]);
+  }, [clientId, API_BASE_URL]);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
@@ -102,7 +113,7 @@ const FileUploaderWithProgress: React.FC<FileUploaderWithProgressProps> = ({
     setError(null);
     setProgressOpen(true);
     setProgressMessages([]);
-    setProgress(undefined);
+    setProgress(0);  // 0から開始
     onUploadStart();
 
     try {
@@ -111,7 +122,11 @@ const FileUploaderWithProgress: React.FC<FileUploaderWithProgressProps> = ({
       formData.append('file', file);
       formData.append('client_id', clientId);
       
-      const response = await fetch('http://localhost:8000/upload', {
+      const uploadUrl = process.env.NODE_ENV === 'production' 
+        ? `${API_BASE_URL}/upload`
+        : '/upload';
+      
+      const response = await fetch(uploadUrl, {
         method: 'POST',
         body: formData
       });
@@ -145,7 +160,7 @@ const FileUploaderWithProgress: React.FC<FileUploaderWithProgressProps> = ({
       setError(err.message || 'アップロードエラーが発生しました');
       setProgressOpen(false);
     }
-  }, [onUploadStart, onUploadComplete, clientId]);
+  }, [onUploadStart, onUploadComplete, clientId, API_BASE_URL]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,

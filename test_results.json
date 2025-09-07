@@ -1,0 +1,62 @@
+[
+  {
+    "test_name": "Get Kana Dictionary",
+    "success": true,
+    "details": "取得データ数: 20",
+    "timestamp": "2025-09-08T00:13:05.765911"
+  },
+  {
+    "test_name": "Kana Dictionary Structure",
+    "success": true,
+    "details": "サンプルデータ: ｺﾝﾋﾞﾆ -> コンビニ",
+    "timestamp": "2025-09-08T00:13:05.765911"
+  },
+  {
+    "test_name": "Record Correction",
+    "success": true,
+    "details": "修正データを正常に記録",
+    "timestamp": "2025-09-08T00:13:05.843276"
+  },
+  {
+    "test_name": "Get Learning Patterns",
+    "success": true,
+    "details": "パターン分析結果を取得",
+    "timestamp": "2025-09-08T00:13:05.869942"
+  },
+  {
+    "test_name": "Get Column Mappings",
+    "success": true,
+    "details": "GMOあおぞら銀行のマッピング数: 5",
+    "timestamp": "2025-09-08T00:13:05.890812"
+  },
+  {
+    "test_name": "Save Column Mappings",
+    "success": true,
+    "details": "テストマッピングを保存",
+    "timestamp": "2025-09-08T00:13:05.971484"
+  },
+  {
+    "test_name": "Get Export Presets",
+    "success": true,
+    "details": "プリセット数: 1",
+    "timestamp": "2025-09-08T00:13:05.994079"
+  },
+  {
+    "test_name": "Save Export Preset",
+    "success": true,
+    "details": "テストプリセットを保存",
+    "timestamp": "2025-09-08T00:13:06.064183"
+  },
+  {
+    "test_name": "Apply Learning",
+    "success": true,
+    "details": "学習適用結果: 2件",
+    "timestamp": "2025-09-08T00:13:06.144229"
+  },
+  {
+    "test_name": "Kana Conversion",
+    "success": true,
+    "details": "半角カナ変換: スーパー",
+    "timestamp": "2025-09-08T00:13:06.144229"
+  }
+]
