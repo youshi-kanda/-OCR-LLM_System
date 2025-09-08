@@ -4,6 +4,10 @@
 PORT=${PORT:-8080}
 echo "Starting application with PORT=$PORT"
 
+# Debug: Check environment variables
+echo "DATABASE_URL is set: ${DATABASE_URL:+YES}"
+echo "DATABASE_URL length: ${#DATABASE_URL}"
+
 # Check static files
 echo "Checking static files..."
 ls -la /app/static/
