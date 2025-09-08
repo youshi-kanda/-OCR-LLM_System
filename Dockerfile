@@ -33,73 +33,17 @@ COPY backend/ ./
 # Copy built frontend
 COPY --from=frontend-builder /app/frontend/build ./static
 
-# Copy nginx config
+# Remove default nginx config
 RUN rm -f /etc/nginx/sites-enabled/default
-COPY nginx.conf /etc/nginx/sites-enabled/default
 
-# Create startup script with database readiness check
-RUN echo '#!/bin/bash\n\
-# Check static files\n\
-echo "Checking static files..."\n\
-ls -la /app/static/ || echo "Static directory not found"\n\
-echo "Index.html content:"\n\
-head -n 10 /app/static/index.html || echo "index.html not found"\n\
-\n\
-# Start nginx in background\n\
-echo "Starting nginx..."\n\
-nginx -t && nginx &\n\
-echo "Nginx started on port 80"\n\
-echo "Nginx process:"\n\
-ps aux | grep nginx | grep -v grep\n\
-sleep 3\n\
-\n\
-# Display environment variables for debugging\n\
-echo "DATABASE_URL: ${DATABASE_URL}"\n\
-echo "PORT: ${PORT}"\n\
-\n\
-# Function to check database connectivity\n\
-check_db() {\n\
-    python -c "import asyncio; import asyncpg; import os; import sys; \n\
-async def test_conn():\n\
-    try:\n\
-        conn = await asyncpg.connect(os.getenv('"'"'DATABASE_URL'"'"'));\n\
-        await conn.execute('"'"'SELECT 1'"'"');\n\
-        await conn.close();\n\
-        print('"'"'Database connection successful'"'"');\n\
-        return True;\n\
-    except Exception as e:\n\
-        print(f'"'"'Database connection failed: {e}'"'"');\n\
-        return False;\n\
-loop = asyncio.new_event_loop();\n\
-result = loop.run_until_complete(test_conn());\n\
-sys.exit(0 if result else 1)"\n\
-}\n\
-\n\
-# Wait for database to be ready (max 30 seconds)\n\
-echo "Waiting for database to be ready..."\n\
-for i in {1..30}; do\n\
-    if check_db; then\n\
-        echo "Database is ready!"\n\
-        break\n\
-    fi\n\
-    echo "Database not ready, waiting... (attempt $i/30)"\n\
-    sleep 2\n\
-done\n\
-\n\
-# Run database migrations\n\
-echo "Running database migrations..."\n\
-python run_migrations.py\n\
-\n\
-# Start FastAPI in background\n\
-echo "Starting FastAPI server..."\n\
-uvicorn main:app --host 0.0.0.0 --port 8080 --workers 1 &\n\
-echo "FastAPI started on port 8080"\n\
-sleep 2\n\
-\n\
-# Start nginx in foreground (as main process)\n\
-echo "Starting nginx in foreground..."\n\
-exec nginx -g "daemon off;"' > start.sh && chmod +x start.sh
+# Copy startup script
+COPY start.sh ./
+RUN chmod +x start.sh
 
-EXPOSE 80
+# Copy migration script
+COPY backend/run_migrations.py ./
+
+# Railway will set PORT dynamically
+EXPOSE ${PORT:-80}
 
 CMD ["./start.sh"]
