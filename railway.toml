@@ -7,10 +7,8 @@ numReplicas = 1
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
 startCommand = "./start.sh"
+healthcheckPath = "/"
+healthcheckTimeout = 300
 
 [variables]
 PORT = "80"
-
-[deploy]
-healthcheckPath = "/"
-healthcheckTimeout = 300
