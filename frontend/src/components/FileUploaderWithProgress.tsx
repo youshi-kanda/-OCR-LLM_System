@@ -30,11 +30,6 @@ const FileUploaderWithProgress: React.FC<FileUploaderWithProgressProps> = ({
   const [progress, setProgress] = useState<number | undefined>(undefined);
   const [wsClient, setWsClient] = useState<WebSocket | null>(null);
   const [clientId] = useState(() => `client-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
-  
-  // APIベースURLの設定
-  const API_BASE_URL = process.env.NODE_ENV === 'production' 
-    ? ''
-    : '';
 
   // WebSocket接続の初期化
   useEffect(() => {
@@ -109,7 +104,7 @@ const FileUploaderWithProgress: React.FC<FileUploaderWithProgressProps> = ({
     return () => {
       ws.close();
     };
-  }, [clientId, API_BASE_URL]);
+  }, [clientId]);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
@@ -127,9 +122,10 @@ const FileUploaderWithProgress: React.FC<FileUploaderWithProgressProps> = ({
       formData.append('file', file);
       formData.append('client_id', clientId);
       
-      const uploadUrl = process.env.NODE_ENV === 'production' 
-        ? `${API_BASE_URL}/upload`
-        : '/upload';
+      // 本番環境では /api プレフィックスを使用
+      const uploadUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? '/upload'
+        : '/api/upload';
       
       const response = await fetch(uploadUrl, {
         method: 'POST',
@@ -165,7 +161,7 @@ const FileUploaderWithProgress: React.FC<FileUploaderWithProgressProps> = ({
       setError(err.message || 'アップロードエラーが発生しました');
       setProgressOpen(false);
     }
-  }, [onUploadStart, onUploadComplete, clientId, API_BASE_URL]);
+  }, [onUploadStart, onUploadComplete, clientId]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
