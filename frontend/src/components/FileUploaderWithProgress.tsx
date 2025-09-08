@@ -33,15 +33,15 @@ const FileUploaderWithProgress: React.FC<FileUploaderWithProgressProps> = ({
   
   // APIベースURLの設定
   const API_BASE_URL = process.env.NODE_ENV === 'production' 
-    ? (process.env.REACT_APP_API_URL || 'http://localhost:8000')
+    ? ''
     : '';
 
   // WebSocket接続の初期化
   useEffect(() => {
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    // 開発環境ではプロキシを使用、本番環境では環境変数を使用
+    // 開発環境と本番環境で適切なWebSocket URLを構築
     const wsUrl = process.env.NODE_ENV === 'production'
-      ? API_BASE_URL.replace('http://', `${wsProtocol}//`).replace('https://', `${wsProtocol}//`) + `/ws/${clientId}`
+      ? `${wsProtocol}//${window.location.host}/ws/${clientId}`
       : `${wsProtocol}//127.0.0.1:8000/ws/${clientId}`;
     console.log('Connecting to WebSocket:', wsUrl);
     const ws = new WebSocket(wsUrl);

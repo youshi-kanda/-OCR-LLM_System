@@ -1,9 +1,9 @@
 import axios from 'axios';
 import { ProcessingResult, TransactionData } from '../types/transaction';
 
-// 開発環境ではプロキシを通じてアクセス、本番環境では環境変数を使用
+// 開発環境ではプロキシを通じてアクセス、本番環境では相対URLを使用
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? (process.env.REACT_APP_API_URL || 'http://localhost:8000')
+  ? '/api'
   : '';
 
 const apiClient = axios.create({

@@ -20,10 +20,14 @@ from routers import learning
 
 app = FastAPI(title="Siwake Bank Data Reader", version="1.0.0")
 
-# CORS設定
+# CORS設定 - Railway本番環境と開発環境の両方をサポート
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:3000",
+        "https://siwake-app-production.up.railway.app",
+        "https://*.railway.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
