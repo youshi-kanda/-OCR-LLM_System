@@ -40,9 +40,14 @@ const FileUploaderWithProgress: React.FC<FileUploaderWithProgressProps> = ({
   useEffect(() => {
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     // 開発環境と本番環境で適切なWebSocket URLを構築
-    const wsUrl = process.env.NODE_ENV === 'production'
-      ? `${wsProtocol}//${window.location.host}/ws/${clientId}`
-      : `${wsProtocol}//127.0.0.1:8000/ws/${clientId}`;
+    let wsUrl: string;
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      // ローカル開発環境
+      wsUrl = `${wsProtocol}//127.0.0.1:8000/ws/${clientId}`;
+    } else {
+      // 本番環境（Railway等）
+      wsUrl = `${wsProtocol}//${window.location.host}/ws/${clientId}`;
+    }
     console.log('Connecting to WebSocket:', wsUrl);
     const ws = new WebSocket(wsUrl);
     
