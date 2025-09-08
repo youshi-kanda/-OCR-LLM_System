@@ -17,6 +17,75 @@ async def run_migrations():
         conn = await asyncpg.connect(database_url)
         print("Connected to database successfully")
         
+        # First, create the base tables
+        print("Creating base tables...")
+        await conn.execute("""
+            -- 処理結果テーブル
+            CREATE TABLE IF NOT EXISTS processing_results (
+                id VARCHAR(36) PRIMARY KEY,
+                filename VARCHAR(255) NOT NULL,
+                status VARCHAR(20) NOT NULL DEFAULT 'pending',
+                confidence_score FLOAT DEFAULT 0.0,
+                processing_time FLOAT DEFAULT 0.0,
+                processing_method VARCHAR(20),
+                claude_confidence FLOAT,
+                gpt4v_confidence FLOAT,
+                agreement_score FLOAT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        await conn.execute("""
+            -- 取引データテーブル
+            CREATE TABLE IF NOT EXISTS transactions (
+                id SERIAL PRIMARY KEY,
+                processing_result_id VARCHAR(36) REFERENCES processing_results(id) ON DELETE CASCADE,
+                date VARCHAR(10) NOT NULL,
+                description TEXT NOT NULL,
+                withdrawal DECIMAL(15,2),
+                deposit DECIMAL(15,2),
+                balance DECIMAL(15,2) NOT NULL,
+                confidence_score FLOAT DEFAULT 0.0,
+                additional_data JSONB DEFAULT '{}',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        # Create indexes
+        await conn.execute("CREATE INDEX IF NOT EXISTS idx_processing_results_created_at ON processing_results(created_at)")
+        await conn.execute("CREATE INDEX IF NOT EXISTS idx_transactions_processing_result_id ON transactions(processing_result_id)")
+        await conn.execute("CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date)")
+        
+        # Create trigger function
+        await conn.execute("""
+            CREATE OR REPLACE FUNCTION update_updated_at_column()
+            RETURNS TRIGGER AS $$
+            BEGIN
+                NEW.updated_at = CURRENT_TIMESTAMP;
+                RETURN NEW;
+            END;
+            $$ language 'plpgsql'
+        """)
+        
+        # Create triggers
+        await conn.execute("""
+            DROP TRIGGER IF EXISTS update_processing_results_updated_at ON processing_results;
+            CREATE TRIGGER update_processing_results_updated_at 
+                BEFORE UPDATE ON processing_results 
+                FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+        """)
+        
+        await conn.execute("""
+            DROP TRIGGER IF EXISTS update_transactions_updated_at ON transactions;
+            CREATE TRIGGER update_transactions_updated_at 
+                BEFORE UPDATE ON transactions 
+                FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+        """)
+        
+        print("Base tables created successfully")
+        
         # Get migrations directory
         migrations_dir = Path(__file__).parent / 'db' / 'migrations'
         if not migrations_dir.exists():
