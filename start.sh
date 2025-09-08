@@ -47,7 +47,7 @@ server {
         add_header X-Served-By "nginx-static";
     }
 
-    # API routes
+    # API routes - strip /api prefix when proxying
     location /api/ {
         proxy_pass http://127.0.0.1:8001/;
         proxy_set_header Host \$host;
@@ -55,6 +55,9 @@ server {
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_redirect off;
+        client_max_body_size 100M;
+        proxy_read_timeout 300s;
+        proxy_connect_timeout 75s;
     }
 
     # WebSocket
