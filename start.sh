@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# Railway provides PORT environment variable
+# Railway provides PORT environment variable (defaults to 8080)
+PORT=${PORT:-8080}
 echo "Starting application with PORT=$PORT"
 
 # Check static files
@@ -11,9 +12,9 @@ ls -la /app/static/
 echo "Running database migrations..."
 python run_migrations.py
 
-# Start FastAPI in background
-echo "Starting FastAPI server on port 8080..."
-uvicorn main:app --host 0.0.0.0 --port 8080 &
+# Start FastAPI in background on a different internal port
+echo "Starting FastAPI server on port 8001..."
+uvicorn main:app --host 0.0.0.0 --port 8001 &
 FASTAPI_PID=$!
 echo "FastAPI started with PID: $FASTAPI_PID"
 
@@ -44,7 +45,7 @@ server {
 
     # API routes
     location /api/ {
-        proxy_pass http://127.0.0.1:8080/;
+        proxy_pass http://127.0.0.1:8001/;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -54,7 +55,7 @@ server {
 
     # WebSocket
     location /ws/ {
-        proxy_pass http://127.0.0.1:8080/ws/;
+        proxy_pass http://127.0.0.1:8001/ws/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -66,7 +67,7 @@ server {
 
     # Direct endpoints
     location ~ ^/(upload|history|results)/ {
-        proxy_pass http://127.0.0.1:8080;
+        proxy_pass http://127.0.0.1:8001;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -75,7 +76,7 @@ server {
 
     # Health check endpoint
     location /health {
-        proxy_pass http://127.0.0.1:8080/health;
+        proxy_pass http://127.0.0.1:8001/health;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
