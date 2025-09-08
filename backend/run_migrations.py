@@ -86,6 +86,49 @@ async def run_migrations():
         
         print("Base tables created successfully")
         
+        # Create learning system tables
+        print("Creating learning system tables...")
+        await conn.execute("""
+            -- 学習パターンテーブル
+            CREATE TABLE IF NOT EXISTS learning_patterns (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                pattern_type VARCHAR(50) NOT NULL,
+                original_pattern TEXT NOT NULL,
+                corrected_pattern TEXT NOT NULL,
+                frequency INTEGER DEFAULT 1,
+                confidence_score FLOAT DEFAULT 0.5,
+                bank_name VARCHAR(255),
+                context JSONB,
+                last_used TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        await conn.execute("""
+            -- 修正履歴テーブル
+            CREATE TABLE IF NOT EXISTS correction_history (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                file_id VARCHAR(255),
+                original_data JSONB NOT NULL,
+                corrected_data JSONB NOT NULL,
+                correction_type VARCHAR(50) NOT NULL,
+                position_info JSONB,
+                user_id VARCHAR(255),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        # Create learning system indexes
+        await conn.execute("CREATE INDEX IF NOT EXISTS idx_pattern_type ON learning_patterns (pattern_type)")
+        await conn.execute("CREATE INDEX IF NOT EXISTS idx_pattern_bank ON learning_patterns (bank_name)")
+        await conn.execute("CREATE INDEX IF NOT EXISTS idx_pattern_frequency ON learning_patterns (frequency DESC)")
+        await conn.execute("CREATE INDEX IF NOT EXISTS idx_correction_file_id ON correction_history (file_id)")
+        await conn.execute("CREATE INDEX IF NOT EXISTS idx_correction_type ON correction_history (correction_type)")
+        await conn.execute("CREATE INDEX IF NOT EXISTS idx_correction_created ON correction_history (created_at)")
+        
+        print("Learning system tables created successfully")
+        
         # Get migrations directory
         migrations_dir = Path(__file__).parent / 'db' / 'migrations'
         if not migrations_dir.exists():
