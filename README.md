@@ -1,5 +1,7 @@
 # Siwake Ver3.1 - 銀行通帳データ読み取りシステム
 
+Railway Deployment Update: 2025-09-08 13:45 JST
+
 日本の銀行通帳の画像やPDFファイルから取引データを自動抽出するWebアプリケーションです。Claude 3.5 SonnetとGPT-4oのデュアルAI処理により高精度な文字認識を実現しています。
 
 ## 🚀 主な機能
